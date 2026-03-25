@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predictor de Seguridad Social · ENIGH 2022</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0b0f1a; --surface:#111827; --surface2:#1a2235;
+    --border:#1f2d45; --accent:#00d4aa; --accent2:#0099ff;
+    --text:#e8edf5; --text-muted:#7a8ba0; --yes:#00d4aa; --no:#ff4d6d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,212,170,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.03) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;}
+  .orb{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:rgba(0,212,170,0.07);top:-150px;left:-100px;}
+  .orb2{width:400px;height:400px;background:rgba(0,153,255,0.05);bottom:-100px;right:-100px;}
+  .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:52px 24px 80px;}
+
+  /* Header */
+  .hdr{margin-bottom:40px;animation:fadeUp .5s ease both;}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,0.1);
+    border:1px solid rgba(0,212,170,0.25);color:var(--accent);font-size:11px;font-weight:500;
+    letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:18px;}
+  .bdot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite;}
+  h1{font-family:'Syne',sans-serif;font-size:clamp(26px,5vw,42px);font-weight:800;
+    line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;}
+  h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .sub{color:var(--text-muted);font-size:14px;line-height:1.7;max-width:500px;}
+  .sub strong{color:var(--text);font-weight:500;}
+
+  /* Stats */
+  .stats{display:flex;background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;margin-bottom:32px;overflow:hidden;animation:fadeUp .5s .1s ease both;}
+  .stat{flex:1;min-width:100px;padding:16px 20px;border-right:1px solid var(--border);}
+  .stat:last-child{border-right:none;}
+  .stat .v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);}
+  .stat .l{font-size:11px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.06em;}
+
+  /* Loading */
+  #loading{text-align:center;padding:60px 20px;animation:fadeUp .4s ease both;}
+  .spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+  #loading p{color:var(--text-muted);font-size:14px;}
+
+  /* Card */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    padding:36px;animation:fadeUp .5s .2s ease both;}
+  .sec-lbl{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--text-muted);margin-bottom:24px;
+    display:flex;align-items:center;gap:10px;}
+  .sec-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .full{grid-column:1/-1;}
+  .field{display:flex;flex-direction:column;gap:8px;}
+  label{font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:.05em;text-transform:uppercase;}
+
+  /* Range */
+  .rdisp{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);}
+  .rdisp sub{font-size:13px;font-weight:400;color:var(--text-muted);}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);
+    border-radius:4px;outline:none;cursor:pointer;margin-top:4px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;
+    border-radius:50%;background:var(--accent);box-shadow:0 0 14px rgba(0,212,170,0.5);transition:transform .15s;}
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25);}
+
+  /* Select */
+  select{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+    color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 14px;
+    outline:none;transition:border-color .2s;width:100%;cursor:pointer;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8ba0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;}
+  select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,0.1);}
+  select option{background:var(--surface2);}
+
+  /* Toggle */
+  .tgroup{display:flex;gap:8px;}
+  .tog{flex:1;padding:11px 0;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface2);color:var(--text-muted);font-family:'DM Sans',sans-serif;
+    font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-align:center;}
+  .tog:hover{border-color:rgba(0,212,170,0.4);color:var(--text);}
+  .tog.on{background:rgba(0,212,170,0.12);border-color:var(--accent);color:var(--accent);font-weight:600;}
+
+  /* Button */
+  .btn{width:100%;margin-top:28px;padding:17px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border:none;border-radius:14px;color:#0b0f1a;
+    font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+    letter-spacing:.04em;cursor:pointer;transition:all .25s;}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,212,170,0.3);}
+  .btn:active{transform:translateY(0);}
+
+  /* Result */
+  .result{margin-top:24px;border-radius:20px;padding:32px;border:1px solid;
+    display:none;animation:resultIn .45s cubic-bezier(.34,1.56,.64,1) both;}
+  .result.show{display:block;}
+  .result.yes{background:rgba(0,212,170,0.06);border-color:rgba(0,212,170,0.3);}
+  .result.no{background:rgba(255,77,109,0.06);border-color:rgba(255,77,109,0.3);}
+  .rhdr{display:flex;align-items:center;gap:16px;margin-bottom:22px;}
+  .rico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;
+    justify-content:center;font-size:26px;flex-shrink:0;}
+  .yes .rico{background:rgba(0,212,170,0.15);}
+  .no .rico{background:rgba(255,77,109,0.15);}
+  .rtitle{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+  .yes .rtitle{color:var(--yes);}
+  .no .rtitle{color:var(--no);}
+  .rsub{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.5;}
+  .plbl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .plbl .pname{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+  .plbl .ppct{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;}
+  .yes .ppct{color:var(--yes);}
+  .no .ppct{color:var(--no);}
+  .btrack{height:8px;background:var(--border);border-radius:8px;overflow:hidden;margin-bottom:22px;}
+  .bfill{height:100%;border-radius:8px;width:0;transition:width .9s cubic-bezier(.34,1.2,.64,1);}
+  .yes .bfill{background:linear-gradient(90deg,var(--yes),#00ffcc);}
+  .no .bfill{background:linear-gradient(90deg,var(--no),#ff8fa3);}
+  .ftitle{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+  .factors{display:flex;flex-direction:column;gap:7px;}
+  .factor{display:flex;align-items:center;gap:10px;font-size:13px;}
+  .fdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .fp .fdot{background:var(--yes);}
+  .fn .fdot{background:var(--no);}
+  .note{margin-top:20px;padding:14px 16px;background:rgba(122,139,160,0.08);
+    border-radius:10px;font-size:12px;color:var(--text-muted);line-height:1.6;}
+  .note strong{color:var(--text);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes resultIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:560px){
+    .grid{grid-template-columns:1fr;}.full{grid-column:1;}
+    .stats{flex-wrap:wrap;}.stat{min-width:50%;border-bottom:1px solid var(--border);}
+    .stat:nth-child(2n){border-right:none;}.stat:nth-last-child(-n+2){border-bottom:none;}
+  }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="badge"><span class="bdot"></span>Modelo real · Gradient Boosting · ENIGH 2022</div>
+    <h1>¿Tiene acceso a<br><em>seguridad social?</em></h1>
+    <p class="sub">Predictor basado en datos reales de la <strong>ENIGH 2022</strong> (INEGI).
+      Ingresa las características de una persona para estimar si cuenta con acceso a seguridad social en México.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v">0.842</div><div class="l">AUC-ROC</div></div>
+    <div class="stat"><div class="v">~76%</div><div class="l">Exactitud</div></div>
+    <div class="stat"><div class="v">200</div><div class="l">Árboles</div></div>
+    <div class="stat"><div class="v">100k+</div><div class="l">Obs. entrenamiento</div></div>
+  </div>
+
+  <div id="loading">
+    <div class="spin"></div>
+    <p>Cargando modelo de Gradient Boosting…</p>
+  </div>
+
+  <div class="card" id="formCard" style="display:none">
+    <div class="sec-lbl">Características de la persona</div>
+    <div class="grid">
+
+      <div class="field full">
+        <label>Edad</label>
+        <div class="rdisp" id="edadV">35 <sub>años</sub></div>
+        <input type="range" id="edad" min="18" max="65" value="35"
+          oninput="document.getElementById('edadV').innerHTML=this.value+' <sub>años</sub>'">
+      </div>
+
+      <div class="field full">
+        <label>Ingreso mensual estimado</label>
+        <div class="rdisp" id="ingrV">$5,000 <sub>MXN/mes</sub></div>
+        <input type="range" id="ingreso" min="0" max="60000" step="500" value="5000"
+          oninput="document.getElementById('ingrV').innerHTML='$'+parseInt(this.value).toLocaleString('es-MX')+' <sub>MXN/mes</sub>'">
+      </div>
+
+      <div class="field">
+        <label>Sexo</label>
+        <div class="tgroup">
+          <button class="tog on" onclick="setT('sexo',1,this)">Hombre</button>
+          <button class="tog"    onclick="setT('sexo',2,this)">Mujer</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Trabajó el mes pasado</label>
+        <div class="tgroup">
+          <button class="tog on" onclick="setT('trabajo',1,this)">Sí</button>
+          <button class="tog"    onclick="setT('trabajo',0,this)">No</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nivel educativo</label>
+        <select id="nivel">
+          <option value="0">Sin escolaridad</option>
+          <option value="1">Preescolar</option>
+          <option value="2">Primaria</option>
+          <option value="3">Secundaria</option>
+          <option value="4" selected>Preparatoria / Bachillerato</option>
+          <option value="5">Técnico superior</option>
+          <option value="6">Licenciatura</option>
+          <option value="7">Posgrado</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Hijos vivos</label>
+        <select id="hijos">
+          <option value="0" selected>0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5 o más</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Tiene discapacidad</label>
+        <div class="tgroup">
+          <button class="tog on" onclick="setT('disc',0,this)">No</button>
+          <button class="tog"    onclick="setT('disc',1,this)">Sí</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Asiste a la escuela</label>
+        <div class="tgroup">
+          <button class="tog"    onclick="setT('asis',1,this)">Sí</button>
+          <button class="tog on" onclick="setT('asis',0,this)">No</button>
+        </div>
+      </div>
+
+    </div>
+    <button class="btn" onclick="predict()">Predecir acceso a seguridad social →</button>
+  </div>
+
+  <div class="result" id="result">
+    <div class="rhdr">
+      <div class="rico" id="rIcon"></div>
+      <div>
+        <div class="rtitle" id="rTitle"></div>
+        <div class="rsub"   id="rSub"></div>
+      </div>
+    </div>
+    <div class="plbl">
+      <span class="pname">Probabilidad estimada</span>
+      <span class="ppct" id="rPct">0%</span>
+    </div>
+    <div class="btrack"><div class="bfill" id="rBar"></div></div>
+    <div class="ftitle">Factores influyentes en esta predicción</div>
+    <div class="factors" id="rFactors"></div>
+    <div class="note">
+      <strong>Nota metodológica:</strong> Este predictor usa el modelo de
+      <strong>Gradient Boosting</strong> entrenado con la ENIGH 2022 (AUC-ROC = <strong>0.842</strong>).
+      Variables no capturadas en la interfaz (entidad, estado conyugal) se fijan en valores de referencia.
+      Los resultados son estimaciones probabilísticas, no determinaciones definitivas.
+    </div>
+  </div>
+
+</div>
+<script>
+// ── Estado ─────────────────────────────────────────────────────────────────
+const S = { sexo:1, trabajo:1, disc:0, asis:0 };
+function setT(k,v,btn){
+  S[k]=v;
+  btn.parentElement.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ── Modelo ─────────────────────────────────────────────────────────────────
+let MODEL = null;
+
+async function loadModel(){
+  try {
+    const r = await fetch('modelo_boost.json');
+    if(!r.ok) throw new Error();
+    MODEL = await r.json();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('formCard').style.display='block';
+  } catch(e){
+    document.getElementById('loading').innerHTML=
+      `<p style="color:var(--no);line-height:1.8">
+        ⚠️ No se encontró <strong>modelo_boost.json</strong>.<br>
+        Coloca ambos archivos en la misma carpeta y abre el HTML desde ahí<br>
+        (no lo abras directamente desde el navegador con doble clic — usa un servidor local<br>
+        o en VS Code usa <em>Live Server</em>).
+      </p>`;
+  }
+}
+
+// ── Recorrer árbol ─────────────────────────────────────────────────────────
+function walkTree(node, feat){
+  if('leaf' in node) return node.leaf;
+  return feat[node.feature] <= node.threshold
+    ? walkTree(node.left,  feat)
+    : walkTree(node.right, feat);
+}
+
+const sigmoid = x => 1/(1+Math.exp(-x));
+
+// ── Construir vector (orden exacto del modelo) ─────────────────────────────
+// feature_names: ['asis_esc','parentesco','trabajo_mp','numren','edad','sexo',
+//  'nivelaprob','gradoaprob','alfabetism','hijos_viv','diabetes','pres_alta',
+//  'pop_insabi','entidad','Discapacidad','ingreso_total','educacion_total',
+//  'alfabetizado','conyug_2','conyug_3','conyug_4','conyug_5','conyug_6']
+function buildVec(){
+  const nivel  = parseInt(document.getElementById('nivel').value);
+  const grado  = nivel > 0 ? 3 : 0;
+  const ingTri = parseFloat(document.getElementById('ingreso').value) * 3;
+  const edad   = parseInt(document.getElementById('edad').value);
+  const hijos  = parseInt(document.getElementById('hijos').value);
+  const educ   = nivel * 3 + grado;
+  return [
+    S.asis,    // asis_esc
+    1,         // parentesco (jefe de hogar)
+    S.trabajo, // trabajo_mp
+    1,         // numren
+    edad,      // edad
+    S.sexo,    // sexo
+    nivel,     // nivelaprob
+    grado,     // gradoaprob
+    1,         // alfabetism
+    hijos,     // hijos_viv
+    0,         // diabetes
+    0,         // pres_alta
+    0,         // pop_insabi
+    9,         // entidad (valor mediano)
+    S.disc,    // Discapacidad
+    ingTri,    // ingreso_total
+    educ,      // educacion_total
+    1,         // alfabetizado
+    0,         // conyug_2
+    0,         // conyug_3
+    0,         // conyug_4
+    0,         // conyug_5
+    0,         // conyug_6
+  ];
+}
+
+// ── Predicción ─────────────────────────────────────────────────────────────
+function predict(){
+  if(!MODEL) return;
+  const feat = buildVec();
+  let score = MODEL.init_score;
+  for(const tree of MODEL.trees)
+    score += MODEL.learning_rate * walkTree(tree, feat);
+  showResult(sigmoid(score), feat);
+}
+
+// ── Resultado ──────────────────────────────────────────────────────────────
+function showResult(prob, feat){
+  const isYes = prob >= 0.5;
+  const pct   = Math.round(prob*100);
+  const res   = document.getElementById('result');
+
+  res.className = 'result show ' + (isYes?'yes':'no');
+  document.getElementById('rIcon').textContent  = isYes ? '✅' : '⚠️';
+  document.getElementById('rTitle').textContent = isYes
+    ? 'Probablemente SÍ tiene seguridad social'
+    : 'Probablemente NO tiene seguridad social';
+  document.getElementById('rSub').textContent   = isYes
+    ? 'El modelo estima que esta persona cuenta con acceso a prestaciones sociales formales.'
+    : 'El modelo estima que esta persona carece de acceso a seguridad social formal, posiblemente por trabajo informal o desempleo.';
+  document.getElementById('rPct').textContent   = pct + '%';
+
+  const bar = document.getElementById('rBar');
+  bar.style.width = '0%';
+  setTimeout(()=>{ bar.style.width = pct+'%'; }, 60);
+
+  // Factores
+  const ingreso = feat[15];
+  const trabajo = feat[2];
+  const educ    = feat[16];
+  const edad    = feat[4];
+  const disc    = feat[14];
+  const asis    = feat[0];
+
+  const factors = [];
+  if(ingreso > 15000) factors.push({t:`Ingreso trimestral alto ($${(ingreso).toLocaleString('es-MX')})`, p:true});
+  else                factors.push({t:`Ingreso trimestral bajo ($${(ingreso).toLocaleString('es-MX')})`, p:false});
+  if(trabajo===1)     factors.push({t:'Trabajó el mes pasado', p:true});
+  else                factors.push({t:'No trabajó el mes pasado', p:false});
+  if(educ>=18)        factors.push({t:'Nivel educativo universitario o posgrado', p:true});
+  else if(educ>=12)   factors.push({t:'Nivel educativo medio superior', p:true});
+  else                factors.push({t:'Educación básica o inferior', p:false});
+  if(edad>=25&&edad<=55) factors.push({t:'Edad en rango laboral activo (25–55 años)', p:true});
+  else                factors.push({t:'Edad fuera del rango laboral más activo', p:false});
+  if(disc===1)        factors.push({t:'Presencia de discapacidad', p:false});
+  if(asis===1)        factors.push({t:'Asiste a la escuela (puede indicar dependencia)', p:false});
+
+  document.getElementById('rFactors').innerHTML =
+    factors.map(f=>`<div class="factor ${f.p?'fp':'fn'}"><span class="fdot"></span>${f.t}</div>`).join('');
+
+  res.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+loadModel();
+</script>
+</body>
+</html>
