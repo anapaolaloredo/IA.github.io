@@ -214,11 +214,11 @@
     </div>
     <div class="crd crd-orange">
       <div class="field">
-        <label>Ingreso mensual estimado</label>
+        <label>Ingreso trimestral (ing_tri acumulado)</label>
         <div class="rrow">
-          <div class="rval" id="ingrV">$5,000 <sub>MXN/mes</sub></div>
-          <input type="range" id="ingreso" min="0" max="60000" step="500" value="5000" class="green"
-            oninput="document.getElementById('ingrV').innerHTML='$'+parseInt(this.value).toLocaleString('es-MX')+' <sub>MXN/mes</sub>'">
+          <div class="rval" id="ingrV">$15,000 <sub>MXN/trim</sub></div>
+          <input type="range" id="ingreso" min="0" max="180000" step="1000" value="15000" class="green"
+            oninput="document.getElementById('ingrV').innerHTML='$'+parseInt(this.value).toLocaleString('es-MX')+' <sub>MXN/trim</sub>'">
         </div>
       </div>
     </div>
@@ -376,7 +376,7 @@ const sigmoid = x => 1 / (1 + Math.exp(-x));
 function buildVec() {
   const nivel  = parseInt(document.getElementById('nivel').value);
   const grado  = nivel > 0 ? 3 : 0;
-  const ingTri = parseFloat(document.getElementById('ingreso').value) * 3;
+  const ingTri = parseFloat(document.getElementById('ingreso').value);
   const edad   = parseInt(document.getElementById('edad').value);
   const hijos  = parseInt(document.getElementById('hijos').value);
   const educ   = nivel * 3 + grado;
